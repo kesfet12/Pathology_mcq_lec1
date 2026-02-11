@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bone Tumors Exam</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Cairo:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* إخفاء شريط التمرير */
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+        *::-webkit-scrollbar { display: none; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+
+        .quiz-container {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .q-count { color: #888; font-size: 0.9rem; font-weight: 500; }
+
+        .timer-box {
+            background-color: #2c2c2c;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #444;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .timer-box.warning {
+            background-color: #4a1818;
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        /* Question Area */
+        .question-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        .question-text {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #ffffff;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .option {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            text-align: left;
+            transition: background 0.2s;
+            color: #ddd;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .option:active { background-color: #444; }
+
+        .opt-letter {
+            font-weight: bold;
+            color: #2979ff;
+            min-width: 25px;
+            display: inline-block;
+        }
+
+        .opt-text {
+            flex: 1;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        /* Feedback Colors */
+        .option.correct {
+            background-color: #1b5e20 !important;
+            border-color: #00e676 !important;
+            color: #fff;
+        }
+        .option.correct .opt-letter { color: #fff; }
+
+        .option.wrong {
+            background-color: #b71c1c !important;
+            border-color: #ff1744 !important;
+            color: #fff;
+        }
+        .option.wrong .opt-letter { color: #fff; }
+
+        .disabled { pointer-events: none; }
+
+        /* Navigation */
+        .navigation {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            flex-shrink: 0;
+        }
+
+        button {
+            background: #2979ff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            background-color: #444;
+            color: #888;
+            box-shadow: none;
+        }
+
+        /* Result Screen */
+        .result-screen {
+            display: none;
+            text-align: center;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .score-box {
+            background: #2c2c2c;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+
+        .big-score { font-size: 3rem; font-weight: bold; color: #2979ff; display: block; }
+
+        .review-section { text-align: left; margin-top: 10px; }
+        
+        .review-item {
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+            padding: 15px 5px;
+        }
+
+        .review-q-text {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-screen" style="display:flex; flex-direction:column; height:100%;">
+        <div class="header">
+            <span class="q-count" id="q-progress"></span>
+            <div class="timer-box" id="timer-box">
+                <span id="timer">30</span>s
+            </div>
+        </div>
+        
+        <div class="question-area">
+            <div class="question-text" id="question-text"></div>
+            <ul class="options-list" id="options-list"></ul>
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" onclick="prevQuestion()" disabled>Prev</button>
+            <button id="next-btn" onclick="nextQuestion()">Next</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h2 style="color: #fff; margin-top:0;">Quiz Results</h2>
+        <div class="score-box">
+            <span class="big-score" id="score-text">0%</span>
+            <p id="score-detail" style="color:#aaa; margin:5px 0 0;">0 / 0 Correct</p>
+        </div>
+        <div class="review-section" id="review-list"></div>
+        <div style="padding: 20px 0;">
+            <button onclick="restartQuiz()" style="width:100%; background:#00c853;">Restart</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            question: "The morphology of osteoma is composed of:",
+            options: ["Immature cartilage", "Poorly differentiated bone", "Mature lamellar bony trabeculae", "Necrotic bone tissue"],
+            answer: 2 // C
+        },
+        {
+            question: "The bony trabeculae in osteoma are separated by:",
+            options: ["Adipose tissue", "Fibrovascular tissue", "Cartilaginous tissue", "Muscle fibers"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteoid osteoma and osteoblastoma are:",
+            options: ["Malignant tumors", "Cartilage-producing tumors", "Benign bone-producing tumors", "Metastatic tumors"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteoid osteoma and osteoblastoma are similar in:",
+            options: ["Clinical behavior only", "Radiographic features only", "Histologic features", "Size"],
+            answer: 2 // C
+        },
+        {
+            question: "By definition, osteoid osteomas are:",
+            options: ["Larger than 5 cm", "Equal to 2 cm", "Less than 2 cm in diameter", "Always microscopic"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteoid osteoma is most common in:",
+            options: ["Children", "Young men", "Elderly women", "Infants"],
+            answer: 1 // B
+        },
+        {
+            question: "About 50% of osteoid osteoma cases involve the cortex of the",
+            options: ["Humerus and radius", "Femur or tibia", "Skull bones", "Pelvis"],
+            answer: 1 // B
+        },
+        {
+            question: "The only radiographic clue of osteoid osteoma may be",
+            options: ["Bone destruction", "Lytic lesion without reaction", "Thick rim of reactive cortical bone", "Soft tissue mass"],
+            answer: 2 // C
+        },
+        {
+            question: "Despite their small size, osteoid osteomas usually present with:",
+            options: ["Mild intermittent pain", "Painless swelling", "Severe nocturnal pain", "Neurologic deficits"],
+            answer: 2 // C
+        },
+        {
+            question: "The severe pain of osteoid osteoma is probably caused by:",
+            options: ["Histamine release", "Prostaglandin E2 produced by osteoblasts", "Bone marrow edema", "Increased calcium deposition"],
+            answer: 1 // B
+        },
+        {
+            question: "Pain associated with osteoid osteoma is relieved by:",
+            options: ["Chemotherapy", "Antibiotics", "Radiotherapy", "Aspirin and other NSAIDs"],
+            answer: 3 // D
+        },
+        {
+            question: "Osteoblastomas are characterized by a size that is:",
+            options: ["Less than 1 cm", "Equal to 2 cm", "Larger than 2 cm", "Microscopic"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteoblastomas most frequently involve the:",
+            options: ["Skull bones", "Cortex of long bones", "Pelvic girdle", "Posterior components of vertebrae"],
+            answer: 3 // D
+        },
+        {
+            question: "Pain associated with osteoblastoma is typically:",
+            options: ["Relieved by aspirin", "Relieved by NSAIDs", "Unresponsive to aspirin", "Always nocturnal"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteoblastoma usually does NOT induce",
+            options: ["Vertebral involvement", "Marked bony reaction", "Tumor enlargement", "Local pain"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteoid osteoma can be treated by:",
+            options: ["Curettage", "En bloc excision", "Radiotherapy", "Radiofrequency ablation"],
+            answer: 3 // D
+        },
+        {
+            question: "Osteoblastoma is usually treated by:",
+            options: ["Aspirin therapy", "Radiofrequency ablation", "Observation only", "Curettage or en bloc excision"],
+            answer: 3 // D
+        },
+        {
+            question: "Osteoid osteoma and osteoblastoma are best described as:",
+            options: ["Infiltrative necrotic masses", "Cartilage-rich tumors", "Round-to-oval hemorrhagic gritty tan masses", "Soft fatty lesions"],
+            answer: 2 // C
+        },
+        {
+            question: "These tumors are composed of trabeculae of",
+            options: ["Lamellar bone", "Hyaline cartilage", "Fibrous tissue", "Woven bone"],
+            answer: 3 // D
+        },
+        {
+            question: "The woven bone trabeculae are rimmed by",
+            options: ["Chondrocytes", "Osteoclasts", "Fibroblasts", "A single layer of osteoblasts"],
+            answer: 3 // D
+        },
+        {
+            question: "The stroma surrounding the neoplastic bone consists of",
+            options: ["Dense collagen", "Adipose tissue", "Loose connective tissue with dilated capillaries", "Cartilage"],
+            answer: 2 // C
+        },
+        {
+            question: "Which feature helps distinguish these tumors from osteosarcoma?",
+            options: ["High mitotic activity", "Poorly defined margins", "Infiltrative growth", "Small size with benign cytologic features"],
+            answer: 3 // D
+        },
+        {
+            question: "Cartilage-forming tumors are characterized by formation of:",
+            options: ["Fibrous tissue", "Elastic cartilage", "Woven bone", "Hyaline cartilage"],
+            answer: 3 // D
+        },
+        {
+            question: "Benign cartilaginous tumors are:",
+            options: ["Much more common than malignant ones", "Equal in frequency", "Extremely rare", "Less common than malignant ones"],
+            answer: 0 // A
+        },
+        {
+            question: "Osteochondroma is also known as:",
+            options: ["Osteoma", "Enchondroma", "Exostosis", "Osteosarcoma"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteochondroma arises from the:",
+            options: ["Bone marrow", "Bone surface", "Joint capsule", "Periosteum"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteochondroma may be described as:",
+            options: ["Flat only", "Infiltrative", "Always multiple", "Sessile or pedunculated with a bony stalk"],
+            answer: 3 // D
+        },
+        {
+            question: "Approximately 85% of osteochondromas are",
+            options: ["Syndromic", "Malignant", "Solitary", "Multiple"],
+            answer: 2 // C
+        },
+        {
+            question: "Solitary osteochondromas are usually diagnosed in",
+            options: ["Childhood", "Late adolescence and early adulthood", "Middle age", "Old age"],
+            answer: 1 // B
+        },
+        {
+            question: "Multiple osteochondromas usually present during",
+            options: ["Late adulthood", "Adolescence", "Childhood", "Old age"],
+            answer: 2 // C
+        },
+        {
+            question: "Regarding sex distribution osteochondromas affect:",
+            options: ["Women more than men", "Men and women equally", "Men three times more than women", "Women three times more than men"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteochondromas develop in bones of",
+            options: ["Intramembranous origin", "Endochondral origin", "Fibrous origin", "Membranous origin"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteochondromas arise from the",
+            options: ["Diaphysis of long bones", "Epiphysis of short bones", "Metaphysis near the growth plate", "Medullary cavity"],
+            answer: 2 // C
+        },
+        {
+            question: "The most common site for osteochondromas is near the:",
+            options: ["Shoulder", "Elbow", "Hip", "Knee"],
+            answer: 3 // D
+        },
+        {
+            question: "Osteochondromas are usually",
+            options: ["Rapidly growing", "Slow-growing masses", "Highly malignant", "Inflammatory lesions"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteochondromas may become painful when they",
+            options: ["Metastasize", "Undergo necrosis", "Impinge on a nerve or the stalk fractures", "Become infected"],
+            answer: 2 // C
+        },
+        {
+            question: "In many cases, osteochondromas are detected:",
+            options: ["After severe symptoms", "During infection", "After trauma", "Incidentally"],
+            answer: 3 // D
+        },
+        {
+            question: "In multiple hereditary exostoses, bowed and shortened bones result from:",
+            options: ["Tumor invasion", "Marrow fibrosis", "Infection", "Disturbance in epiphyseal growth"],
+            answer: 3 // D
+        },
+        {
+            question: "Osteochondromas range in size from:",
+            options: ["1–20 cm", "0.1–1 cm", "5–30 cm", "Less than 2 cm"],
+            answer: 0 // A
+        },
+        {
+            question: "The cap of an osteochondroma is composed of:",
+            options: ["Woven bone", "Fibrous tissue", "Hyaline cartilage covered by perichondrium", "Elastic cartilage"],
+            answer: 2 // C
+        },
+        {
+            question: "The cartilage cap of osteochondroma:",
+            options: ["Undergoes intramembranous ossification", "Remains unchanged", "Becomes fibrous tissue", "Recapitulates the growth plate and undergoes endochondral ossification"],
+            answer: 3 // D
+        },
+        {
+            question: "The cortex of the stalk in osteochondroma",
+            options: ["Is separate from host bone", "Is necrotic", "Is cartilaginous", "Merges with the cortex of the host bone"],
+            answer: 3 // D
+        },
+        {
+            question: "Osteochondromas usually stop growing at",
+            options: ["Puberty onset", "Growth plate closure", "Middle age", "Birth"],
+            answer: 1 // B
+        },
+        {
+            question: "When symptomatic, osteochondromas are cured by",
+            options: ["Radiotherapy", "Chemotherapy", "Simple excision", "Observation only"],
+            answer: 2 // C
+        },
+        {
+            question: "Secondary chondrosarcoma develops:",
+            options: ["Frequently in all cases", "Only in solitary lesions", "Never in osteochondromas", "Rarely, usually in multiple hereditary exostosis"],
+            answer: 3 // D
+        },
+        {
+            question: "Chondromas are benign tumors of:",
+            options: ["Fibrous tissue", "Hyaline cartilage", "Woven bone", "Elastic cartilage"],
+            answer: 1 // B
+        },
+        {
+            question: "Chondromas occur in bones of:",
+            options: ["Intramembranous origin", "Endochondral origin", "Flat bones only", "Skull only"],
+            answer: 1 // B
+        },
+        {
+            question: "Chondromas can arise",
+            options: ["Only on the bone surface", "Only in the medullary cavity", "Within the medullary cavity (enchondromas) or rarely on bone surface (juxtacortical)", "Only in cartilage caps"],
+            answer: 2 // C
+        },
+        {
+            question: "Enchondromas are usually diagnosed in individuals aged:",
+            options: ["5–20 years", "20–50 years", "50–70 years", "Childhood only"],
+            answer: 1 // B
+        },
+        {
+            question: "Enchondromas typically appear as",
+            options: ["Multiple diaphyseal lesions", "Solitary metaphyseal lesions of tubular bones of hands and feet", "Large flat bone tumors", "Vertebral lesions"],
+            answer: 1 // B
+        },
+        {
+            question: "Radiographs of enchondromas show",
+            options: ["Diffuse bone destruction", "Circumscribed lucency with central irregular calcifications, sclerotic rim, intact cortex", "Osteolytic lesion with periosteal reaction", "Soft tissue mass only"],
+            answer: 1 // B
+        },
+        {
+            question: "Disorders characterized by multiple enchondromas include",
+            options: ["Ollier disease and Maffucci syndrome", "Osteoporosis", "Osteogenesis imperfecta", "Paget disease"],
+            answer: 0 // A
+        },
+        {
+            question: "Most sporadic enchondromas of large bones are",
+            options: ["Symptomatic and painful", "Asymptomatic and detected incidentally", "Malignant", "Associated with fracture in all cases"],
+            answer: 1 // B
+        },
+        {
+            question: "The most common location for enchondromas is:",
+            options: ["Skull", "Tubular bones of hands and feet", "Vertebrae", "Pelvis"],
+            answer: 1 // B
+        },
+        {
+            question: "Usual size of a chondroma",
+            options: [">10 cm", "5–10 cm", "<3 cm", "3–5 cm"],
+            answer: 2 // C
+        },
+        {
+            question: "Solitary enchondromas:",
+            options: ["Frequently become malignant", "Are usually asymptomatic", "Always require surgery", "Occur only in children"],
+            answer: 1 // B
+        },
+        {
+            question: "Preferred treatment for solitary enchondroma",
+            options: ["Chemotherapy", "Radiation", "Observation or curettage", "Amputation"],
+            answer: 2 // C
+        },
+        {
+            question: "Juxtacortical chondromas are",
+            options: ["Medullary tumors", "Rarely on bone surface", "Mostly in skull", "Malignant"],
+            answer: 1 // B
+        },
+        {
+            question: "Morphology of chondromas",
+            options: ["Gray-blue, translucent <3 cm benign chondrocytes", "Red, opaque, >5 cm", "Yellow, solid, >10 cm", "Brown, calcified, <1 cm"],
+            answer: 0 // A
+        },
+        {
+            question: "Most enchondromas are",
+            options: ["Malignant", "Asymptomatic", "Painful in all cases", "In skull only"],
+            answer: 1 // B
+        },
+        {
+            question: "Complication that can occur in large bone enchondromas",
+            options: ["Infection", "Pathologic fracture", "Osteomyelitis", "Nerve compression"],
+            answer: 1 // B
+        },
+        {
+            question: "Maffucci syndrome features",
+            options: ["Enchondromatosis with hemangiomas", "Single cartilage tumor", "Osteoporosis", "Bone cysts"],
+            answer: 0 // A
+        },
+        {
+            question: "Malignant transformation of enchondroma is",
+            options: ["Common in solitary lesions", "Rare in solitary lesions", "Impossible", "Occurs in children only"],
+            answer: 1 // B
+        },
+        {
+            question: "Radiographic “sclerotic rim” indicates",
+            options: ["Aggressive tumor", "Benign lesion", "Infection", "Malignancy"],
+            answer: 1 // B
+        },
+        {
+            question: "Chondroma cells are called",
+            options: ["Osteocytes", "Chondrocytes", "Fibroblasts", "Myocytes"],
+            answer: 1 // B
+        },
+        {
+            question: "Curettage means",
+            options: ["Radiation therapy", "Chemotherapy", "Scraping out the lesion", "Amputation"],
+            answer: 2 // C
+        },
+        {
+            question: "Which is NOT true about enchondromas?",
+            options: ["Usually <3 cm", "Found in hands and feet", "Frequently malignant", "May cause fractures"],
+            answer: 2 // C
+        },
+        {
+            question: "Chondroblastoma arises from which part of the bone?",
+            options: ["Diaphysis", "Metaphysis", "Epiphysis", "Periosteum"],
+            answer: 2 // C
+        },
+        {
+            question: "The most commonly affected bone in chondroblastoma is:",
+            options: ["Skull", "Upper tibia and lower femur", "Spine", "Pelvis"],
+            answer: 1 // B
+        },
+        {
+            question: "Chondroblastoma most commonly occurs in",
+            options: ["Patients under 20 years", "Patients 20–50 years", "Elderly >60 years", "Any age equally"],
+            answer: 0 // A
+        },
+        {
+            question: "The male-to-female ratio in chondroblastoma is:",
+            options: ["1:1", "2:1", "3:1", "1:2"],
+            answer: 1 // B
+        },
+        {
+            question: "Radiographs of chondroblastoma usually show",
+            options: ["Diffuse sclerotic lesion", "Sharply-circumscribed lytic lesion with small calcifications", "Mixed lytic-sclerotic lesion", "Soft tissue mass only"],
+            answer: 1 // B
+        },
+        {
+            question: "The cut surface of chondroblastoma typically shows:",
+            options: ["Hard bony mass", "Soft chondroid tissue with hemorrhage, necrosis, calcification", "Fibrous tissue only", "Cystic lesion filled with fluid"],
+            answer: 1 // B
+        },
+        {
+            question: "Microscopically, chondroblastoma is composed of",
+            options: ["Large spindle cells", "Small round to polygonal mononuclear cells resembling chondroblasts", "Fibroblasts", "Adipocytes"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteosarcoma typically peaks during:",
+            options: ["Infancy", "Adolescence", "Middle adulthood", "Old age"],
+            answer: 1 // B
+        },
+        {
+            question: "Benign bone lesions are most often:",
+            options: ["Painful and aggressive", "Rapidly growing", "Incidental findings without symptoms", "Associated with pathological fractures"],
+            answer: 2 // C
+        },
+        {
+            question: "What do bone-forming tumors produce?",
+            options: ["Cartilage only", "Unmineralized osteoid or mineralized woven bone", "Fibrous tissue only", "Mature lamellar bone only"],
+            answer: 1 // B
+        },
+        {
+            question: "What is the growth rate of an osteoma?",
+            options: ["Rapid-growing", "Variable growth", "Slow-growing", "Non-growing"],
+            answer: 2 // C
+        },
+        {
+            question: "Where is osteoma almost exclusively located?",
+            options: ["Long bones of the limbs", "Vertebral column", "Flat bones of the skull and face", "Pelvic bones"],
+            answer: 2 // C
+        },
+        {
+            question: "Which tissue separates the mature bony trabeculae in this lesion?",
+            options: ["Adipose tissue", "Fibrous tissue only", "Fibrovascular tissue", "Cartilaginous tissue"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteochondroma is classified as:",
+            options: ["Malignant cartilage-forming tumor", "Benign cartilage-forming tumor", "Benign bone-forming tumor", "Tumor of unknown origin"],
+            answer: 1 // B
+        },
+        {
+            question: "Chondroma most commonly occurs in:",
+            options: ["Pelvis and shoulder", "Small bones of hands and feet", "Vertebrae", "Distal femur"],
+            answer: 1 // B
+        },
+        {
+            question: "Osteoid osteoma is most commonly seen in:",
+            options: ["Elderly women", "Young men", "Children under 5 years", "Middle-aged women"],
+            answer: 1 // B
+        },
+        {
+            question: "The central lesion seen in osteoid osteoma is known as the:",
+            options: ["Cartilage cap", "Medullary cavity", "Nidus", "Epiphysis"],
+            answer: 2 // C
+        },
+        {
+            question: "Which of the following is TRUE regarding the tissue reaction to Osteoblastomas?",
+            options: ["They usually do not induce a marked bony reaction", "They always cause severe bone fractures", "They cause massive bony overgrowth immediately", "They induce a strong allergic reaction"],
+            answer: 0 // A
+        },
+        {
+            question: "Which statement correctly describes the pain associated with Osteoblastomas?",
+            options: ["It is typically relieved by aspirin", "It is less severe than Osteoid Osteoma and occurs only in the morning", "It is unresponsive to aspirin", "It is caused by muscle spasms only"],
+            answer: 2 // C
+        },
+        {
+            question: "Regarding benign cartilaginous tumors compared to malignant ones, which of the following is true?",
+            options: ["Malignant tumors are more common", "Both occur with equal frequency", "Benign tumors are much more common", "Benign tumors only occur in children"],
+            answer: 2 // C
+        },
+        {
+            question: "Cartilage-forming tumors are characterized by the formation of which type of cartilage?",
+            options: ["Fibrocartilage", "Elastic cartilage", "Hyaline cartilage", "Calcified cartilage"],
+            answer: 2 // C
+        },
+        {
+            question: "Solitary osteochondromas are most commonly diagnosed during which life stage?",
+            options: ["Early childhood", "Late adolescence and early adulthood", "Late middle age", "Infancy"],
+            answer: 1 // B
+        },
+        {
+            question: "Which group is affected by Osteochondromas three times more often than others?",
+            options: ["Women", "Children under 5 years old", "Men", "Elderly patients"],
+            answer: 2 // C
+        },
+        {
+            question: "What is the most common benign cartilage-capped tumor that arises from the bone surface?",
+            options: ["Osteoblastoma", "Osteosarcoma", "Osteochondroma (exostosis)", "Chondrosarcoma"],
+            answer: 2 // C
+        },
+        {
+            question: "Chondromas are benign tumors of hyaline cartilage that occur in bones of:",
+            options: ["Intramembranous origin", "Endochondral origin", "Ectodermal origin", "Mesenchymal origin only"],
+            answer: 1 // B
+        },
+        {
+            question: "Ollier disease and Maffucci syndrome are disorders characterized by:",
+            options: ["Development of a single malignant osteosarcoma.", "Development of multiple enchondromas (enchondromatosis).", "Systematic destruction of the growth plate.", "High levels of bone mineralization."],
+            answer: 1 // B
+        },
+        {
+            question: "Most sporadic enchondromas in large bones are typically:",
+            options: ["Highly painful from the onset.", "Asymptomatic and detected incidentally.", "Associated with skin rashes.", "Rapidly growing malignant masses."],
+            answer: 1 // B
+        },
+        {
+            question: "The treatment for enchondroma usually includes:",
+            options: ["Radical amputation.", "Chemotherapy and radiation.", "Observation or curettage.", "Systemic antibiotics."],
+            answer: 2 // C
+        },
+        {
+            question: "Which of the following best describes the radiographic appearance of the lesion?",
+            options: ["Ill-defined sclerotic mass.", "Sharply-circumscribed lytic lesion with multiple small foci of calcification.", "Ground-glass opacity with no calcification.", "Diffuse infiltrative lesion involving the soft tissue."],
+            answer: 1 // B
+        },
+        {
+            question: "Grossly, this tumor is typically a well-defined mass that is located in the:",
+            options: ["Diaphysis", "Metaphysis", "Epiphysis", "Periosteum surface"],
+            answer: 2 // C
+        },
+        {
+            question: "Based on the microscopic examination, how is the cellularity of this tumor described?",
+            options: ["Hypocellular (low cellularity)", "Acellular (no cells)", "Highly cellular", "Moderately cellular with fibrosis"],
+            answer: 2 // C
+        },
+        {
+            question: "The mononuclear cells found in this tumor resemble which type of cells?",
+            options: ["Osteoblasts", "Fibroblasts", "Chondroblasts", "Lipoblasts"],
+            answer: 2 // C
+        },
+        {
+            question: "Which tumor most commonly peaks during adolescence and frequently involves the knee?",
+            options: ["Chondrosarcoma", "Osteosarcoma", "Fibrosarcoma", "Ewing sarcoma", "Giant cell tumor"],
+            answer: 1 // B
+        },
+        {
+            question: "What is the main goal of therapy for bone malignancies?",
+            options: ["Complete elimination of pain", "Preventing tumor recurrence only", "Optimizing survival while maintaining function", "Avoiding all surgical procedures", "Rapid tumor shrinkage"],
+            answer: 2 // C
+        },
+        {
+            question: "Which factor provides important diagnostic clues in bone tumors?",
+            options: ["Gender predominance", "Tumor color", "Age group and anatomic location", "Serum calcium level"],
+            answer: 2 // C
+        },
+        {
+            question: "Osteosarcoma most commonly peaks in which age group?",
+            options: ["Early childhood", "Middle age", "Adolescence", "Old age"],
+            answer: 2 // C
+        },
+        {
+            question: "About 50% of osteoid osteomas involve the cortex of the:",
+            options: ["Humerus or ulna", "Radius or ulna", "Femur or tibia", "Vertebrae"],
+            answer: 2 // C
+        },
+        {
+        question: "Osteochondromas typically develop from which part of the bone?",
+        options: ["Epiphysis only", "Metaphysis near the growth plate", "Diaphysis", "Subperiosteal surface of flat bones"],
+        answer: 1 // B
+    },
+    {
+        question: "The most common location of enchondromas is:",
+        options: ["Pelvis and spine", "Skull and facial bones", "Tubular bones of hands and feet", "Ribs and sternum"],
+        answer: 2 // C
+    },
+    {
+        question: "The radiographic appearance of chondroblastoma is best described as:",
+        options: ["Poorly defined sclerotic lesion", "Diffuse bone destruction", "Sharply circumscribed lytic lesion", "Sunburst pattern"],
+        answer: 2 // C
+    },
+    {
+        question: "Which cartilage tumor has a higher risk of sarcomatous transformation?",
+        options: ["Solitary enchondroma", "Enchondromas associated with enchondromatosis", "Solitary osteochondroma", "Osteoma"],
+        answer: 1 // B
+    },
+    {
+        question: "Which bone tumor peaks during adolescence and most frequently involves the knee?",
+        options: ["Chondrosarcoma", "Osteoma", "Osteosarcoma", "Enchondroma"],
+        answer: 2 // C
+    },
+    {
+        question: "Osteoblastomas most frequently involve which part of the skeleton?",
+        options: ["Cortex of the femur", "Posterior components of the vertebrae", "Small bones of the hands", "Flat bones of the skull"],
+        answer: 1 // B
+    },
+    {
+        question: "Histologically, osteoid osteoma and osteoblastoma are composed of woven bone rimmed by:",
+        options: ["Chondrocytes", "A single layer of osteoblasts", "Malignant spindle cells", "Hyaline cartilage"],
+        answer: 1 // B
+    },
+    {
+        question: "Definitive diagnosis of almost all bone tumors requires:",
+        options: ["Radiographic imaging", "Physical examination", "Biopsy", "Blood tests"],
+        answer: 2 // C
+    },
+    {
+        question: "Osteomas are almost exclusively restricted to which type of bones?",
+        options: ["Long tubular bones", "Vertebrae", "Flat bones of the skull and face", "Pelvis"],
+        answer: 2 // C
+    },
+    {
+        question: "Severe nocturnal pain in osteoid osteoma is primarily relieved by:",
+        options: ["En bloc excision", "Radiofrequency ablation", "Aspirin and NSAIDs", "Observation"],
+        answer: 2 // C
+    },
+    {
+        question: "A defining clinical difference between osteoid osteoma and osteoblastoma is that osteoid osteoma is:",
+        options: ["Larger than 2 cm", "Found mostly in the vertebrae", "Less than 2 cm in diameter", "Unresponsive to aspirin"],
+        answer: 2 // C
+    },
+    {
+        question: "Which tumor is described as a benign, cartilage-capped tumor arising from the bone surface?",
+        options: ["Osteoblastoma", "Enchondroma", "Osteochondroma", "Chondroblastoma"],
+        answer: 2 // C
+    },
+    {
+        question: "Multiple hereditary exostosis syndrome is characterized by:",
+        options: ["Solitary osteochondromas in adults", "Multiple osteochondromas presenting in childhood", "Osteomas of the skull", "Malignant tumors in young men"],
+        answer: 1 // B
+    },
+    {
+        question: "Osteochondromas arise from the metaphysis near the:",
+        options: ["Epiphysis", "Diaphysis", "Growth plate", "Joint space"],
+        answer: 2 // C
+    },
+    {
+        question: "Enchondromas are benign tumors of hyaline cartilage that usually arise within:",
+        options: ["The cortex of the skull", "The medullary cavity", "The posterior vertebrae", "The skin"],
+        answer: 1 // B
+    },
+    {
+        question: "In osteochondroma morphology, the cortex of the stalk is continuous with:",
+        options: ["The joint capsule", "The cortex of the host bone", "The skin", "Only the cartilage cap"],
+        answer: 1 // B
+    },
+    {
+        question: "Where are enchondromas most typically located?",
+        options: ["Pelvis and proximal femur", "Tubular bones of the hands and feet", "Skull and facial bones", "Spine"],
+        answer: 1 // B
+    },
+    {
+        question: "Ollier disease and Maffucci syndrome are disorders associated with:",
+        options: ["Multiple osteomas", "Multiple enchondromas (enchondromatosis)", "Osteosarcoma", "Vertebral fractures"],
+        answer: 1 // B
+    },
+    {
+        question: "Chondroblastoma is a rare benign tumor that specifically arises from the:",
+        options: ["Diaphysis", "Metaphysis", "Epiphysis", "Periosteum"],
+        answer: 2 // C
+    },
+    {
+        question: "Radiographically, enchondromas appear as a circumscribed lucency with:",
+        options: ["Thick reactive cortical bone", "Central irregular calcifications and a sclerotic rim", "Sunburst pattern", "Bone destruction without a rim"],
+        answer: 1 // B
+    },
+    {
+        question: "Chondroblastoma usually occurs in patients:",
+        options: ["Over 50 years of age", "Between 20 and 50 years of age", "Under 20 years of age", "During infancy only"],
+        answer: 2 // C
+    },
+    {
+        question: "The most common sites for chondroblastoma are around the knee and the:",
+        options: ["Upper humerus", "Small bones of the feet", "Ribs", "Mandible"],
+        answer: 0 // A
+    },
+    {
+        question: "Microscopically, chondroblastoma contains mononuclear cells and:",
+        options: ["Multinucleate osteoclast-like giant cells", "Mature lamellar bone", "Only malignant chondroblasts", "Fibrovascular tissue only"],
+        answer: 0 // A
+    },
+    {
+        question: "Which tumor is considered by some as a hamartoma rather than a true neoplasm?",
+        options: ["Osteoblastoma", "Osteoma", "Chondrosarcoma", "Chondroblastoma"],
+        answer: 1 // B
+    },
+    {
+        question: "Osteoid osteoma pain is thought to be caused by the production of:",
+        options: ["Calcium", "Prostaglandin E2", "Cartilage matrix", "Collagen"],
+        answer: 1 // B
+    },
+    {
+        question: "The \"cartilage cap\" of an osteochondroma is covered by:",
+        options: ["Periosteum", "Perichondrium", "Endosteum", "Synovium"],
+        answer: 1 // B
+    },
+    {
+        question: "Bone tumors are primarily classified according to:",
+        options: ["The size of the lesion", "The patient's weight", "The normal cell types they recapitulate or the matrix they produce", "The level of pain they cause"],
+        answer: 2 // C
+    },
+    {
+        question: "Juxtacortical chondromas are different from enchondromas because they occur:",
+        options: ["Within the medullary cavity", "On the bone surface", "In the skull only", "Only in older adults"],
+        answer: 1 // B
+    }
+
+            
+    ];
+
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F']; 
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let userAnswers = new Array(questions.length).fill(null);
+    let timeLeft = 30;
+    let timerInterval;
+
+    const questionText = document.getElementById('question-text');
+    const optionsList = document.getElementById('options-list');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const qProgress = document.getElementById('q-progress');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const timerDisplay = document.getElementById('timer');
+    const timerBox = document.getElementById('timer-box');
+
+    function startTimer() {
+        timeLeft = 30;
+        timerDisplay.innerText = timeLeft;
+        timerBox.classList.remove('warning');
+        clearInterval(timerInterval);
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 10) timerBox.classList.add('warning');
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                handleTimeUp();
+            }
+        }, 1000);
+    }
+
+    function handleTimeUp() {
+        const options = optionsList.children;
+        for (let i = 0; i < options.length; i++) {
+            options[i].classList.add('disabled');
+            options[i].style.opacity = "0.5";
+        }
+        nextQuestion();
+    }
+
+    function loadQuestion() {
+        const currentQuestion = questions[currentQuestionIndex];
+        const qText = currentQuestion.question.replace(/^\d+[\.\-]\s*/, '');
+        questionText.innerText = (currentQuestionIndex + 1) + ". " + qText;
+        
+        qProgress.innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+        optionsList.innerHTML = '';
+
+        const isAnswered = userAnswers[currentQuestionIndex] !== null;
+
+        currentQuestion.options.forEach((option, index) => {
+            const li = document.createElement('li');
+            li.classList.add('option');
+            
+            const letter = letters[index] || '';
+            li.innerHTML = `<span class="opt-letter">${letter}</span> <span class="opt-text">${option}</span>`;
+            
+            if (isAnswered) {
+                li.classList.add('disabled');
+                if (index === currentQuestion.answer) li.classList.add('correct');
+                if (index === userAnswers[currentQuestionIndex] && index !== currentQuestion.answer) li.classList.add('wrong');
+            } else {
+                li.onclick = () => selectOption(index, li);
+            }
+            optionsList.appendChild(li);
+        });
+
+        prevBtn.disabled = currentQuestionIndex === 0;
+        nextBtn.innerText = currentQuestionIndex === questions.length - 1 ? "Finish" : "Next";
+
+        if (!isAnswered) startTimer();
+        else {
+            clearInterval(timerInterval);
+            timerDisplay.innerText = "-";
+        }
+    }
+
+    function selectOption(selectedIndex, element) {
+        clearInterval(timerInterval);
+        userAnswers[currentQuestionIndex] = selectedIndex;
+        
+        const currentQuestion = questions[currentQuestionIndex];
+        const options = optionsList.children;
+
+        for (let i = 0; i < options.length; i++) options[i].classList.add('disabled');
+
+        if (selectedIndex === currentQuestion.answer) {
+            element.classList.add('correct');
+        } else {
+            element.classList.add('wrong');
+            setTimeout(() => {
+                options[currentQuestion.answer].classList.add('correct');
+            }, 1000);
+        }
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+    }
+
+    function showResults() {
+        clearInterval(timerInterval);
+        quizScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        score = 0;
+        const reviewList = document.getElementById('review-list');
+        reviewList.innerHTML = '';
+
+        questions.forEach((q, index) => {
+            const userAnswer = userAnswers[index];
+            if (userAnswer === q.answer) score++;
+
+            const reviewItem = document.createElement('div');
+            reviewItem.classList.add('review-item');
+            
+            const qText = q.question.replace(/^\d+[\.\-]\s*/, '');
+
+            let optionsHtml = '';
+            q.options.forEach((opt, optIndex) => {
+                let style = 'padding:10px; margin-bottom:5px; border-radius:4px; font-family:Roboto; display:flex; gap:10px; text-align:left;';
+                let letterStyle = 'font-weight:bold; min-width:20px;';
+                
+                if (optIndex === q.answer) {
+                    style += 'background: #1b5e20; border: 1px solid #00e676; color:white;';
+                } else if (optIndex === userAnswer && userAnswer !== q.answer) {
+                    style += 'background: #b71c1c; border: 1px solid #ff1744; color:white;';
+                } else {
+                    style += 'background: #2c2c2c; color:#888; border: 1px solid #444;';
+                }
+                
+                optionsHtml += `
+                    <div style="${style}">
+                        <span style="${letterStyle}">${letters[optIndex]}</span>
+                        <span>${opt}</span>
+                    </div>`;
+            });
+
+            reviewItem.innerHTML = `
+                <div class="review-q-text">${index + 1}. ${qText}</div>
+                <div style="direction: ltr;">${optionsHtml}</div>
+            `;
+            reviewList.appendChild(reviewItem);
+        });
+
+        const percentage = Math.round((score / questions.length) * 100);
+        document.getElementById('score-text').innerText = percentage + "%";
+        document.getElementById('score-detail').innerText = `${score} / ${questions.length} Correct`;
+    }
+
+    function restartQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        userAnswers = new Array(questions.length).fill(null);
+        quizScreen.style.display = 'flex';
+        resultScreen.style.display = 'none';
+        loadQuestion();
+    }
+
+    loadQuestion();
+</script>
+</body>
+</html>
