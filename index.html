@@ -942,7 +942,10 @@
         }, 1000);
     }
 
-    function handleTimeUp() {
+        function handleTimeUp() {
+        // هذا السطر الجديد: يسجل انو الوقت خلص حتى لا يعيد الحساب من ترجع
+        userAnswers[currentQuestionIndex] = -1; 
+
         const options = optionsList.children;
         for (let i = 0; i < options.length; i++) {
             options[i].classList.add('disabled');
